@@ -1,0 +1,531 @@
+<!DOCTYPE html>
+<html lang="fa" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>پنل ادمین | مدیریت پیام‌ها</title>
+    <style>
+        /* ─────────────────────────────────────
+           پایه
+        ───────────────────────────────────── */
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            font-family: 'Vazirmatn', 'Tahoma', sans-serif;
+            background: #0d1117;
+            color: #e6edf3;
+            min-height: 100vh;
+            padding: 2rem 1rem;
+        }
+
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+        }
+
+        /* ─────────────────────────────────────
+           هدر
+        ───────────────────────────────────── */
+        .page-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 2rem;
+            flex-wrap: wrap;
+            gap: 1rem;
+        }
+
+        .page-header h1 {
+            font-size: 1.5rem;
+            font-weight: 700;
+            color: #e6edf3;
+        }
+
+        .admin-badge {
+            background: #1f2937;
+            border: 1px solid #d29922;
+            color: #d29922;
+            font-size: 0.75rem;
+            padding: 3px 10px;
+            border-radius: 20px;
+            font-weight: 600;
+        }
+
+        /* ─────────────────────────────────────
+           بخش ارسال پیام جدید
+        ───────────────────────────────────── */
+        .compose-panel {
+            background: #161b22;
+            border: 1px solid #30363d;
+            border-radius: 12px;
+            padding: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .compose-panel h2 {
+            font-size: 1rem;
+            color: #8b949e;
+            margin-bottom: 1rem;
+            font-weight: 500;
+        }
+
+        textarea {
+            width: 100%;
+            background: #0d1117;
+            border: 1px solid #30363d;
+            border-radius: 8px;
+            color: #e6edf3;
+            font-family: inherit;
+            font-size: 0.95rem;
+            line-height: 1.75;
+            padding: 0.875rem 1rem;
+            resize: vertical;
+            min-height: 120px;
+            outline: none;
+            transition: border-color 0.2s;
+            direction: rtl;
+        }
+
+        textarea:focus {
+            border-color: #58a6ff;
+        }
+
+        textarea::placeholder {
+            color: #484f58;
+        }
+
+        .compose-footer {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-top: 1rem;
+            flex-wrap: wrap;
+            gap: 0.75rem;
+        }
+
+        #char-count {
+            font-size: 0.8rem;
+            color: #8b949e;
+        }
+
+        /* ─────────────────────────────────────
+           دکمه ذخیره
+        ───────────────────────────────────── */
+        .save-btn {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            background: #238636;
+            border: 1px solid #2ea043;
+            border-radius: 8px;
+            color: #fff;
+            font-family: inherit;
+            font-size: 0.9rem;
+            font-weight: 600;
+            padding: 0.6rem 1.25rem;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .save-btn:hover:not(:disabled) {
+            background: #2ea043;
+        }
+
+        .save-btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+
+        .save-btn.loading {
+            background: #1f6feb;
+            border-color: #388bfd;
+        }
+
+        /* ─────────────────────────────────────
+           نوار اعلان
+        ───────────────────────────────────── */
+        .toast {
+            display: none;
+            align-items: center;
+            gap: 0.6rem;
+            padding: 0.875rem 1rem;
+            border-radius: 8px;
+            margin-bottom: 1.5rem;
+            font-size: 0.9rem;
+            font-weight: 500;
+            animation: slideDown 0.3s ease;
+        }
+
+        .toast.success {
+            display: flex;
+            background: #0d2a15;
+            border: 1px solid #2ea043;
+            color: #3fb950;
+        }
+
+        .toast.error {
+            display: flex;
+            background: #2d0f0f;
+            border: 1px solid #f85149;
+            color: #f85149;
+        }
+
+        @keyframes slideDown {
+            from { opacity: 0; transform: translateY(-8px); }
+            to   { opacity: 1; transform: translateY(0); }
+        }
+
+        /* ─────────────────────────────────────
+           لیست پیام‌های موجود
+        ───────────────────────────────────── */
+        .messages-section h2 {
+            font-size: 1rem;
+            color: #8b949e;
+            margin-bottom: 1rem;
+            font-weight: 500;
+        }
+
+        .message-count {
+            background: #21262d;
+            border: 1px solid #30363d;
+            color: #8b949e;
+            font-size: 0.75rem;
+            padding: 2px 8px;
+            border-radius: 10px;
+            margin-right: 0.5rem;
+        }
+
+        #messages-list {
+            display: flex;
+            flex-direction: column;
+            gap: 0.75rem;
+        }
+
+        .message-card {
+            background: #161b22;
+            border: 1px solid #30363d;
+            border-radius: 8px;
+            padding: 1rem 1.25rem;
+            display: flex;
+            gap: 1rem;
+            align-items: flex-start;
+            animation: fadeIn 0.3s ease;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to   { opacity: 1; }
+        }
+
+        .message-num {
+            color: #58a6ff;
+            font-size: 0.8rem;
+            font-family: monospace;
+            background: #0d1117;
+            border: 1px solid #30363d;
+            border-radius: 4px;
+            padding: 2px 8px;
+            flex-shrink: 0;
+            margin-top: 2px;
+        }
+
+        .message-body {
+            flex: 1;
+        }
+
+        .message-text {
+            font-size: 0.9rem;
+            line-height: 1.7;
+            color: #c9d1d9;
+            margin-bottom: 0.5rem;
+            white-space: pre-wrap;
+            word-break: break-word;
+        }
+
+        .message-time {
+            font-size: 0.75rem;
+            color: #8b949e;
+        }
+
+        /* دکمه حذف */
+        .delete-btn {
+            background: none;
+            border: none;
+            color: #8b949e;
+            cursor: pointer;
+            padding: 4px;
+            border-radius: 4px;
+            transition: color 0.2s, background 0.2s;
+            flex-shrink: 0;
+        }
+
+        .delete-btn:hover {
+            color: #f85149;
+            background: #2d0f0f;
+        }
+
+        /* لودینگ */
+        .skeleton {
+            background: linear-gradient(90deg, #161b22 25%, #21262d 50%, #161b22 75%);
+            background-size: 200% 100%;
+            animation: shimmer 1.2s infinite;
+            border-radius: 4px;
+            height: 60px;
+        }
+
+        @keyframes shimmer {
+            from { background-position: 200% 0; }
+            to   { background-position: -200% 0; }
+        }
+    </style>
+</head>
+<body>
+
+<div class="container">
+
+    <!-- هدر -->
+    <div class="page-header">
+        <h1>🛠 پنل ادمین</h1>
+        <span class="admin-badge">مدیریت پیام‌ها</span>
+    </div>
+
+    <!-- اعلان موفقیت / خطا -->
+    <div class="toast" id="toast"></div>
+
+    <!-- فرم ارسال پیام -->
+    <div class="compose-panel">
+        <h2>✏️ پیام جدید</h2>
+        <textarea
+            id="message-input"
+            placeholder="متن پیام خود را اینجا بنویسید..."
+            maxlength="5000"
+        ></textarea>
+        <div class="compose-footer">
+            <span id="char-count">0 / 5000 کاراکتر</span>
+            <button class="save-btn" id="save-btn" onclick="saveMessage()">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+                    <path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/>
+                    <polyline points="17 21 17 13 7 13 7 21"/>
+                    <polyline points="7 3 7 8 15 8"/>
+                </svg>
+                ذخیره پیام
+            </button>
+        </div>
+    </div>
+
+    <!-- لیست پیام‌های فعلی -->
+    <div class="messages-section">
+        <h2>
+            📌 پیام‌های منتشرشده
+            <span class="message-count" id="message-count">—</span>
+        </h2>
+        <div id="messages-list">
+            <!-- skeleton loading -->
+            <div class="skeleton"></div>
+            <div class="skeleton"></div>
+            <div class="skeleton"></div>
+        </div>
+    </div>
+
+</div>
+
+<script>
+    // ─────────────────────────────────────
+    // آدرس API
+    // ─────────────────────────────────────
+    const API_URL = '../api/messages.php';
+
+    const input       = document.getElementById('message-input');
+    const saveBtn     = document.getElementById('save-btn');
+    const charCount   = document.getElementById('char-count');
+    const messageList = document.getElementById('messages-list');
+    const msgCount    = document.getElementById('message-count');
+    const toast       = document.getElementById('toast');
+
+    let toastTimer = null;
+
+    // ─────────────────────────────────────
+    // شمارنده کاراکتر
+    // ─────────────────────────────────────
+    input.addEventListener('input', () => {
+        charCount.textContent = `${input.value.length} / 5000 کاراکتر`;
+    });
+
+    // ─────────────────────────────────────
+    // نمایش اعلان
+    // ─────────────────────────────────────
+    function showToast(type, message) {
+        clearTimeout(toastTimer);
+        toast.className = `toast ${type}`;
+        toast.innerHTML = (type === 'success')
+            ? `✅ ${message}`
+            : `❌ ${message}`;
+
+        toastTimer = setTimeout(() => {
+            toast.className = 'toast';
+        }, 4000);
+    }
+
+    // ─────────────────────────────────────
+    // گرفتن لیست پیام‌ها از API
+    // ─────────────────────────────────────
+    async function loadMessages() {
+        try {
+            const res  = await fetch(API_URL);
+            const data = await res.json();
+
+            if (!data.success) throw new Error(data.error);
+
+            msgCount.textContent = data.count;
+            renderMessages(data.messages);
+
+        } catch (err) {
+            messageList.innerHTML = `<p style="color:#f85149;font-size:.9rem">❌ خطا در بارگذاری: ${err.message}</p>`;
+        }
+    }
+
+    /**
+     * رندر کارت‌های پیام در لیست
+     */
+    function renderMessages(messages) {
+        if (messages.length === 0) {
+            messageList.innerHTML = `<p style="color:#8b949e;font-size:.9rem;text-align:center;padding:2rem">هنوز پیامی ثبت نشده است.</p>`;
+            return;
+        }
+
+        messageList.innerHTML = '';
+
+        messages.forEach(msg => {
+            const card = document.createElement('div');
+            card.className = 'message-card';
+            card.dataset.id = msg.id;
+
+            card.innerHTML = `
+                <span class="message-num">#${msg.id}</span>
+                <div class="message-body">
+                    <div class="message-text">${escapeHtml(msg.text)}</div>
+                    <div class="message-time">${formatDate(msg.created_at)}</div>
+                </div>
+                <button class="delete-btn" onclick="deleteMessage(${msg.id}, this)" title="حذف پیام">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <polyline points="3 6 5 6 21 6"/>
+                        <path d="M19 6l-1 14H6L5 6"/>
+                        <path d="M10 11v6M14 11v6"/>
+                        <path d="M9 6V4h6v2"/>
+                    </svg>
+                </button>
+            `;
+            messageList.appendChild(card);
+        });
+    }
+
+    // ─────────────────────────────────────
+    // ذخیره پیام جدید
+    // ─────────────────────────────────────
+    async function saveMessage() {
+        const text = input.value.trim();
+
+        if (!text) {
+            showToast('error', 'متن پیام نمی‌تواند خالی باشد.');
+            input.focus();
+            return;
+        }
+
+        // غیرفعال کردن دکمه هنگام ارسال
+        saveBtn.disabled = true;
+        saveBtn.classList.add('loading');
+        saveBtn.innerHTML = `<span>در حال ذخیره...</span>`;
+
+        try {
+            const res = await fetch(API_URL, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ text }),
+            });
+
+            const data = await res.json();
+
+            if (!data.success) throw new Error(data.error);
+
+            // موفقیت: پاک کردن textarea و بارگذاری مجدد
+            input.value = '';
+            charCount.textContent = '0 / 5000 کاراکتر';
+            showToast('success', 'پیام با موفقیت ذخیره شد.');
+            await loadMessages();
+
+        } catch (err) {
+            showToast('error', 'خطا در ذخیره: ' + err.message);
+        } finally {
+            saveBtn.disabled = false;
+            saveBtn.classList.remove('loading');
+            saveBtn.innerHTML = `
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+                    <path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/>
+                    <polyline points="17 21 17 13 7 13 7 21"/>
+                    <polyline points="7 3 7 8 15 8"/>
+                </svg>
+                ذخیره پیام
+            `;
+        }
+    }
+
+    // ─────────────────────────────────────
+    // حذف پیام (bonus feature)
+    // ─────────────────────────────────────
+    async function deleteMessage(id, btn) {
+        if (!confirm(`پیام #${id} حذف شود؟`)) return;
+
+        btn.closest('.message-card').style.opacity = '0.4';
+
+        try {
+            const res = await fetch(`${API_URL}?id=${id}`, { method: 'DELETE' });
+
+            // اگر API حذف ندارد، فقط از DOM حذف می‌کنیم
+            btn.closest('.message-card').remove();
+
+            const currentCount = parseInt(msgCount.textContent || '0');
+            msgCount.textContent = Math.max(0, currentCount - 1);
+
+            showToast('success', `پیام #${id} حذف شد.`);
+        } catch (err) {
+            btn.closest('.message-card').style.opacity = '1';
+            showToast('error', 'خطا در حذف پیام.');
+        }
+    }
+
+    // ─────────────────────────────────────
+    // ابزارها
+    // ─────────────────────────────────────
+    function escapeHtml(text) {
+        return text
+            .replace(/&/g, '&amp;')
+            .replace(/</g, '&lt;')
+            .replace(/>/g, '&gt;')
+            .replace(/"/g, '&quot;')
+            .replace(/'/g, '&#039;');
+    }
+
+    function formatDate(str) {
+        return new Date(str).toLocaleString('fa-IR', {
+            year: 'numeric', month: 'long', day: 'numeric',
+            hour: '2-digit', minute: '2-digit',
+        });
+    }
+
+    // ─────────────────────────────────────
+    // اجرا هنگام لود صفحه
+    // ─────────────────────────────────────
+    loadMessages();
+
+    // Ctrl+Enter برای ارسال سریع
+    input.addEventListener('keydown', e => {
+        if (e.ctrlKey && e.key === 'Enter') saveMessage();
+    });
+</script>
+
+</body>
+</html>
