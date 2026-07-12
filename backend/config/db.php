@@ -4,20 +4,33 @@
 // فایل: config/db.php
 // ============================================
 
-define('DB_HOST', 'localhost');
-define('DB_NAME', 'messages_db');
-define('DB_USER', 'root');       // نام کاربری MySQL خود را اینجا وارد کنید
-define('DB_PASS', '');           // رمز MySQL خود را اینجا وارد کنید
-define('DB_CHARSET', 'utf8mb4');
+// ▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼
+// ⚠️ نکته مهم: این «رمز و نام کاربری دیتابیس MySQL» است،
+// نه رمز ورود به پنل ادمین سایت (آن یکی جای دیگری‌ست، پایین توضیح داده شده).
+//
+// اگر روی هاست/سرور دیگری آپلود می‌کنید، این ۴ خط را با اطلاعاتی که
+// شرکت هاستینگ یا phpMyAdmin به شما داده جایگزین کنید:
+// ▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲
+
+define('DB_HOST', 'localhost');   // 🔧 آدرس سرور دیتابیس (روی هاست‌های اشتراکی معمولاً همین "localhost" درست است)
+define('DB_NAME', 'messages_db'); // 🔧 نام دیتابیسی که در database.sql ساخته می‌شود (اگر تغییرش دادید، اینجا هم عوض کنید)
+define('DB_USER', 'root');        // 🔧 نام کاربری MySQL خود را اینجا وارد کنید (روی XAMPP/Laragon معمولاً "root")
+define('DB_PASS', '');            // 🔧 رمز عبور MySQL خود را اینجا وارد کنید (روی XAMPP/Laragon معمولاً خالی می‌ماند)
+define('DB_CHARSET', 'utf8mb4');  // کدگذاری متن (برای پشتیبانی از فارسی و ایموجی) - نیازی به تغییر ندارد
 
 /**
  * ساخت اتصال PDO به دیتابیس
  * در صورت خطا، Exception پرتاب می‌کند
+ *
+ * 📌 این تابع همان جایی است که «اتصال واقعی به دیتابیس» در آن اتفاق می‌افتد.
+ * تمام فایل‌های api/*.php با صدا زدن ()getDB از همین تابع، یک اتصال آماده می‌گیرند.
+ * شما معمولاً نیازی به تغییر داخل این تابع ندارید؛ فقط ۴ مقدار بالا (DB_HOST تا DB_PASS) کافی است.
  */
 function getDB(): PDO {
-    static $pdo = null;
+    static $pdo = null; // اتصال فقط یک بار ساخته می‌شود و برای درخواست‌های بعدی دوباره استفاده می‌شود
 
     if ($pdo === null) {
+        // ساخت رشته اتصال (DSN) با استفاده از تنظیمات بالا
         $dsn = sprintf(
             'mysql:host=%s;dbname=%s;charset=%s',
             DB_HOST,
@@ -25,12 +38,14 @@ function getDB(): PDO {
             DB_CHARSET
         );
 
+        // تنظیمات رفتار PDO (نیازی به تغییر ندارد)
         $options = [
-            PDO::ATTR_ERRMODE            => PDO::ERRMODE_EXCEPTION,
-            PDO::ATTR_DEFAULT_FETCH_MODE => PDO::FETCH_ASSOC,
-            PDO::ATTR_EMULATE_PREPARES   => false,
+            PDO::ATTR_ERRMODE            => PDO::ERRMODE_EXCEPTION,   // خطاها به صورت Exception پرتاب شوند
+            PDO::ATTR_DEFAULT_FETCH_MODE => PDO::FETCH_ASSOC,          // نتایج به صورت آرایه انجمنی برگردند
+            PDO::ATTR_EMULATE_PREPARES   => false,                    // استفاده از prepared statement واقعی (امنیت بیشتر)
         ];
 
+        // 🔌 خط اتصال واقعی به دیتابیس؛ همان نام کاربری/رمزی که بالا تعریف کردید اینجا استفاده می‌شود
         $pdo = new PDO($dsn, DB_USER, DB_PASS, $options);
     }
 

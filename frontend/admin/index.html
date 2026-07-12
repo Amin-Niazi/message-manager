@@ -1,9 +1,10 @@
 <!DOCTYPE html>
+<!-- lang="fa" dir="rtl" یعنی زبان صفحه فارسی و جهت نوشتار راست‌به‌چپ است -->
 <html lang="fa" dir="rtl">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>پنل ادمین | مدیریت پیام‌ها</title>
+    <meta charset="UTF-8"> <!-- کدگذاری کاراکترها؛ برای نمایش درست فارسی لازم است -->
+    <meta name="viewport" content="width=device-width, initial-scale=1.0"> <!-- سازگاری با موبایل -->
+    <title>پنل ادمین | مدیریت پیام‌ها</title> <!-- عنوان تب مرورگر -->
     <style>
         /* ─────────────────────────────────────
            پایه
@@ -45,6 +46,12 @@
             color: #e6edf3;
         }
 
+        .header-right {
+            display: flex;
+            align-items: center;
+            gap: 0.6rem;
+        }
+
         .admin-badge {
             background: #1f2937;
             border: 1px solid #d29922;
@@ -55,15 +62,32 @@
             font-weight: 600;
         }
 
+        .logout-btn {
+            background: none;
+            border: 1px solid #30363d;
+            color: #8b949e;
+            font-size: 0.78rem;
+            font-family: inherit;
+            padding: 5px 12px;
+            border-radius: 20px;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .logout-btn:hover {
+            border-color: #f85149;
+            color: #f85149;
+        }
+
         /* ─────────────────────────────────────
-           بخش ارسال پیام جدید
+           پنل‌های عمومی (کامپوز / دسته‌بندی)
         ───────────────────────────────────── */
         .compose-panel {
             background: #161b22;
             border: 1px solid #30363d;
             border-radius: 12px;
             padding: 1.5rem;
-            margin-bottom: 2rem;
+            margin-bottom: 1.5rem;
         }
 
         .compose-panel h2 {
@@ -88,6 +112,7 @@
             outline: none;
             transition: border-color 0.2s;
             direction: rtl;
+            margin-bottom: 1rem;
         }
 
         textarea:focus {
@@ -98,11 +123,104 @@
             color: #484f58;
         }
 
+        /* ─────────────────────────────────────
+           انتخاب دسته‌بندی هنگام نوشتن پیام
+        ───────────────────────────────────── */
+        .category-row {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            margin-bottom: 1rem;
+            flex-wrap: wrap;
+        }
+
+        .category-row label {
+            font-size: 0.85rem;
+            color: #8b949e;
+            white-space: nowrap;
+        }
+
+        select {
+            flex: 1;
+            min-width: 160px;
+            background: #0d1117;
+            border: 1px solid #30363d;
+            border-radius: 8px;
+            color: #e6edf3;
+            font-family: inherit;
+            font-size: 0.9rem;
+            padding: 0.6rem 0.8rem;
+            outline: none;
+            cursor: pointer;
+        }
+
+        select:focus {
+            border-color: #58a6ff;
+        }
+
+        .add-category-toggle {
+            background: none;
+            border: 1px dashed #30363d;
+            color: #58a6ff;
+            font-size: 0.82rem;
+            font-family: inherit;
+            padding: 0.6rem 0.9rem;
+            border-radius: 8px;
+            cursor: pointer;
+            white-space: nowrap;
+        }
+
+        .add-category-toggle:hover {
+            border-color: #58a6ff;
+        }
+
+        .new-category-row {
+            display: none;
+            gap: 0.6rem;
+            margin-bottom: 1rem;
+        }
+
+        .new-category-row.show {
+            display: flex;
+        }
+
+        .new-category-row input {
+            flex: 1;
+            background: #0d1117;
+            border: 1px solid #30363d;
+            border-radius: 8px;
+            color: #e6edf3;
+            font-family: inherit;
+            font-size: 0.9rem;
+            padding: 0.6rem 0.8rem;
+            outline: none;
+            direction: rtl;
+        }
+
+        .new-category-row input:focus {
+            border-color: #58a6ff;
+        }
+
+        .mini-btn {
+            background: #1f6feb;
+            border: 1px solid #388bfd;
+            color: #fff;
+            font-family: inherit;
+            font-size: 0.85rem;
+            font-weight: 600;
+            padding: 0.5rem 1rem;
+            border-radius: 8px;
+            cursor: pointer;
+            white-space: nowrap;
+        }
+
+        .mini-btn:hover:not(:disabled) { background: #388bfd; }
+        .mini-btn:disabled { opacity: 0.5; cursor: not-allowed; }
+
         .compose-footer {
             display: flex;
             align-items: center;
             justify-content: space-between;
-            margin-top: 1rem;
             flex-wrap: wrap;
             gap: 0.75rem;
         }
@@ -180,6 +298,39 @@
         }
 
         /* ─────────────────────────────────────
+           فیلتر دسته‌بندی برای لیست پیام‌ها
+        ───────────────────────────────────── */
+        .filter-tabs {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin-bottom: 1.25rem;
+        }
+
+        .filter-tab {
+            background: #161b22;
+            border: 1px solid #30363d;
+            color: #8b949e;
+            font-family: inherit;
+            font-size: 0.8rem;
+            padding: 0.4rem 0.9rem;
+            border-radius: 20px;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .filter-tab:hover {
+            border-color: #58a6ff;
+            color: #58a6ff;
+        }
+
+        .filter-tab.active {
+            background: #1f6feb;
+            border-color: #388bfd;
+            color: #fff;
+        }
+
+        /* ─────────────────────────────────────
            لیست پیام‌های موجود
         ───────────────────────────────────── */
         .messages-section h2 {
@@ -246,8 +397,29 @@
             word-break: break-word;
         }
 
+        .message-meta-row {
+            display: flex;
+            align-items: center;
+            gap: 0.6rem;
+            flex-wrap: wrap;
+        }
+
         .message-time {
             font-size: 0.75rem;
+            color: #8b949e;
+        }
+
+        .category-tag {
+            font-size: 0.72rem;
+            background: #1f2937;
+            border: 1px solid #388bfd;
+            color: #79c0ff;
+            padding: 1px 9px;
+            border-radius: 10px;
+        }
+
+        .category-tag.none {
+            border-color: #30363d;
             color: #8b949e;
         }
 
@@ -281,16 +453,29 @@
             from { background-position: 200% 0; }
             to   { background-position: -200% 0; }
         }
+
+        /* صفحه در حال بررسی ورود */
+        .auth-checking {
+            text-align: center;
+            padding: 4rem 1rem;
+            color: #8b949e;
+        }
     </style>
 </head>
 <body>
 
-<div class="container">
+<!-- تا زمانی که وضعیت ورود بررسی می‌شود -->
+<div class="auth-checking" id="auth-checking">در حال بررسی ورود...</div>
+
+<div class="container" id="app" style="display:none">
 
     <!-- هدر -->
     <div class="page-header">
         <h1>🛠 پنل ادمین</h1>
-        <span class="admin-badge">مدیریت پیام‌ها</span>
+        <div class="header-right">
+            <span class="admin-badge" id="admin-badge">مدیریت پیام‌ها</span>
+            <button class="logout-btn" onclick="logout()">خروج</button>
+        </div>
     </div>
 
     <!-- اعلان موفقیت / خطا -->
@@ -299,6 +484,20 @@
     <!-- فرم ارسال پیام -->
     <div class="compose-panel">
         <h2>✏️ پیام جدید</h2>
+
+        <div class="category-row">
+            <label for="category-select">دسته‌بندی:</label>
+            <select id="category-select">
+                <option value="">در حال بارگذاری...</option>
+            </select>
+            <button type="button" class="add-category-toggle" onclick="toggleNewCategory()">+ دسته جدید</button>
+        </div>
+
+        <div class="new-category-row" id="new-category-row">
+            <input type="text" id="new-category-input" placeholder="نام دسته‌بندی جدید...">
+            <button type="button" class="mini-btn" id="add-category-btn" onclick="addCategory()">افزودن</button>
+        </div>
+
         <textarea
             id="message-input"
             placeholder=".متن پیام خود را اینجا بنویسید..."
@@ -323,6 +522,12 @@
             📌 پیام‌های منتشرشده
             <span class="message-count" id="message-count">—</span>
         </h2>
+
+        <!-- فیلتر بر اساس دسته‌بندی -->
+        <div class="filter-tabs" id="filter-tabs">
+            <button class="filter-tab active" data-id="" onclick="filterByCategory('', this)">همه دسته‌ها</button>
+        </div>
+
         <div id="messages-list">
             <!-- skeleton loading -->
             <div class="skeleton"></div>
@@ -333,28 +538,81 @@
 
 </div>
 
+<!-- ============================================
+     اسکریپت جاوااسکریپت: کل منطق پنل ادمین
+     (بررسی ورود، ارسال/حذف پیام، مدیریت دسته‌بندی)
+     ============================================ -->
 <script>
     // ─────────────────────────────────────
-    // آدرس API
-    //بارگذاری API 
+    // آدرس‌های API (این ۳ فایل PHP در backend/api هستند)
     // ─────────────────────────────────────
-    const API_URL = '../api/messages.php';
+    const MESSAGES_API   = '../../backend/api/messages.php';
+    const CATEGORIES_API = '../../backend/api/categories.php';
+    const AUTH_API       = '../../backend/api/auth.php';
 
-    const input       = document.getElementById('message-input');
-    const saveBtn     = document.getElementById('save-btn');
-    const charCount   = document.getElementById('char-count');
-    const messageList = document.getElementById('messages-list');
-    const msgCount    = document.getElementById('message-count');
-    const toast       = document.getElementById('toast');
+    const input          = document.getElementById('message-input');
+    const saveBtn        = document.getElementById('save-btn');
+    const charCount      = document.getElementById('char-count');
+    const messageList    = document.getElementById('messages-list');
+    const msgCount       = document.getElementById('message-count');
+    const toast          = document.getElementById('toast');
+    const categorySelect = document.getElementById('category-select');
+    const filterTabs     = document.getElementById('filter-tabs');
+    const newCatRow      = document.getElementById('new-category-row');
+    const newCatInput    = document.getElementById('new-category-input');
+    const addCatBtn      = document.getElementById('add-category-btn');
+    const adminBadge     = document.getElementById('admin-badge');
 
     let toastTimer = null;
+    let currentFilter = '';
 
     // ─────────────────────────────────────
-    // شمارنده کاراکتر
+    // بررسی ورود ادمین قبل از نمایش پنل
     // ─────────────────────────────────────
-    input.addEventListener('input', () => {
-        charCount.textContent = `${input.value.length} / 5000 کاراکتر`;
-    });
+    async function checkAuth() {
+        try {
+            const res  = await fetch(`${AUTH_API}?action=status`, { credentials: 'include' });
+            const data = await res.json();
+
+            if (!data.success || !data.authenticated) {
+                window.location.href = 'login.html';
+                return;
+            }
+
+            adminBadge.textContent = `👤 ${data.username}`;
+            document.getElementById('auth-checking').style.display = 'none';
+            document.getElementById('app').style.display = 'block';
+
+            init();
+
+        } catch (err) {
+            window.location.href = 'login.html';
+        }
+    }
+
+    async function logout() {
+        try {
+            await fetch(`${AUTH_API}?action=logout`, {
+                method: 'POST',
+                credentials: 'include',
+            });
+        } finally {
+            window.location.href = 'login.html';
+        }
+    }
+
+    function init() {
+        loadCategories();
+        loadMessages();
+
+        input.addEventListener('input', () => {
+            charCount.textContent = `${input.value.length} / 5000 کاراکتر`;
+        });
+
+        input.addEventListener('keydown', e => {
+            if (e.ctrlKey && e.key === 'Enter') saveMessage();
+        });
+    }
 
     // ─────────────────────────────────────
     // نمایش اعلان
@@ -372,11 +630,100 @@
     }
 
     // ─────────────────────────────────────
+    // دسته‌بندی‌ها: بارگذاری، افزودن، فیلتر
+    // ─────────────────────────────────────
+    async function loadCategories() {
+        try {
+            const res  = await fetch(CATEGORIES_API, { credentials: 'include' });
+            const data = await res.json();
+            if (!data.success) throw new Error(data.error);
+
+            renderCategorySelect(data.categories);
+            renderFilterTabs(data.categories);
+
+        } catch (err) {
+            categorySelect.innerHTML = `<option value="">خطا در بارگذاری دسته‌ها</option>`;
+        }
+    }
+
+    function renderCategorySelect(categories) {
+        if (categories.length === 0) {
+            categorySelect.innerHTML = `<option value="">ابتدا یک دسته‌بندی اضافه کنید</option>`;
+            return;
+        }
+        categorySelect.innerHTML = categories
+            .map(c => `<option value="${c.id}">${escapeHtml(c.name)}</option>`)
+            .join('');
+    }
+
+    function renderFilterTabs(categories) {
+        const activeAttr = (id) => (String(id) === String(currentFilter)) ? 'active' : '';
+
+        let html = `<button class="filter-tab ${activeAttr('')}" data-id="" onclick="filterByCategory('', this)">همه دسته‌ها</button>`;
+        categories.forEach(c => {
+            html += `<button class="filter-tab ${activeAttr(c.id)}" data-id="${c.id}" onclick="filterByCategory('${c.id}', this)">${escapeHtml(c.name)} <span style="opacity:.6">(${c.message_count})</span></button>`;
+        });
+        filterTabs.innerHTML = html;
+    }
+
+    function filterByCategory(categoryId, btn) {
+        currentFilter = categoryId;
+        [...filterTabs.children].forEach(b => b.classList.remove('active'));
+        btn.classList.add('active');
+        loadMessages();
+    }
+
+    function toggleNewCategory() {
+        newCatRow.classList.toggle('show');
+        if (newCatRow.classList.contains('show')) newCatInput.focus();
+    }
+
+    async function addCategory() {
+        const name = newCatInput.value.trim();
+        if (!name) {
+            showToast('error', 'نام دسته‌بندی نمی‌تواند خالی باشد.');
+            return;
+        }
+
+        addCatBtn.disabled = true;
+        addCatBtn.textContent = 'در حال افزودن...';
+
+        try {
+            const res = await fetch(CATEGORIES_API, {
+                method: 'POST',
+                credentials: 'include',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ name }),
+            });
+            const data = await res.json();
+            if (!data.success) throw new Error(data.error);
+
+            newCatInput.value = '';
+            newCatRow.classList.remove('show');
+            showToast('success', 'دسته‌بندی جدید اضافه شد.');
+            await loadCategories();
+
+            // انتخاب خودکار دسته‌بندی تازه‌ساخته‌شده
+            categorySelect.value = data.data.id;
+
+        } catch (err) {
+            showToast('error', 'خطا: ' + err.message);
+        } finally {
+            addCatBtn.disabled = false;
+            addCatBtn.textContent = 'افزودن';
+        }
+    }
+
+    // ─────────────────────────────────────
     // گرفتن لیست پیام‌ها از API
     // ─────────────────────────────────────
     async function loadMessages() {
         try {
-            const res  = await fetch(API_URL);
+            const url = currentFilter
+                ? `${MESSAGES_API}?category_id=${encodeURIComponent(currentFilter)}`
+                : MESSAGES_API;
+
+            const res  = await fetch(url, { credentials: 'include' });
             const data = await res.json();
 
             if (!data.success) throw new Error(data.error);
@@ -394,7 +741,7 @@
      */
     function renderMessages(messages) {
         if (messages.length === 0) {
-            messageList.innerHTML = `<p style="color:#8b949e;font-size:.9rem;text-align:center;padding:2rem">هنوز پیامی ثبت نشده است.</p>`;
+            messageList.innerHTML = `<p style="color:#8b949e;font-size:.9rem;text-align:center;padding:2rem">پیامی در این دسته‌بندی یافت نشد.</p>`;
             return;
         }
 
@@ -405,11 +752,18 @@
             card.className = 'message-card';
             card.dataset.id = msg.id;
 
+            const categoryTag = msg.category_name
+                ? `<span class="category-tag">${escapeHtml(msg.category_name)}</span>`
+                : `<span class="category-tag none">بدون دسته</span>`;
+
             card.innerHTML = `
                 <span class="message-num">#${msg.id}</span>
                 <div class="message-body">
                     <div class="message-text">${escapeHtml(msg.text)}</div>
-                    <div class="message-time">${formatDate(msg.created_at)}</div>
+                    <div class="message-meta-row">
+                        ${categoryTag}
+                        <span class="message-time">${formatDate(msg.created_at)}</span>
+                    </div>
                 </div>
                 <button class="delete-btn" onclick="deleteMessage(${msg.id}, this)" title="حذف پیام">
                     <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
@@ -428,11 +782,17 @@
     // ذخیره پیام جدید
     // ─────────────────────────────────────
     async function saveMessage() {
-        const text = input.value.trim();
+        const text       = input.value.trim();
+        const categoryId = categorySelect.value;
 
         if (!text) {
             showToast('error', 'متن پیام نمی‌تواند خالی باشد.');
             input.focus();
+            return;
+        }
+
+        if (!categoryId) {
+            showToast('error', 'لطفاً یک دسته‌بندی برای پیام انتخاب کنید.');
             return;
         }
 
@@ -442,10 +802,11 @@
         saveBtn.innerHTML = `<span>در حال ذخیره...</span>`;
 
         try {
-            const res = await fetch(API_URL, {
+            const res = await fetch(MESSAGES_API, {
                 method: 'POST',
+                credentials: 'include',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ text }),
+                body: JSON.stringify({ text, category_id: categoryId }),
             });
 
             const data = await res.json();
@@ -456,6 +817,7 @@
             input.value = '';
             charCount.textContent = '0 / 5000 کاراکتر';
             showToast('success', 'پیام با موفقیت ذخیره شد.');
+            await loadCategories();
             await loadMessages();
 
         } catch (err) {
@@ -475,7 +837,7 @@
     }
 
     // ─────────────────────────────────────
-    // حذف پیام (bonus feature)
+    // حذف پیام
     // ─────────────────────────────────────
     async function deleteMessage(id, btn) {
         if (!confirm(`پیام #${id} حذف شود؟`)) return;
@@ -483,18 +845,24 @@
         btn.closest('.message-card').style.opacity = '0.4';
 
         try {
-            const res = await fetch(`${API_URL}?id=${id}`, { method: 'DELETE' });
+            const res  = await fetch(`${MESSAGES_API}?id=${id}`, {
+                method: 'DELETE',
+                credentials: 'include',
+            });
+            const data = await res.json();
 
-            // اگر API حذف ندارد، فقط از DOM حذف می‌کنیم
+            if (!data.success) throw new Error(data.error);
+
             btn.closest('.message-card').remove();
 
             const currentCount = parseInt(msgCount.textContent || '0');
             msgCount.textContent = Math.max(0, currentCount - 1);
 
             showToast('success', `پیام #${id} حذف شد.`);
+            await loadCategories();
         } catch (err) {
             btn.closest('.message-card').style.opacity = '1';
-            showToast('error', 'خطا در حذف پیام.');
+            showToast('error', 'خطا در حذف پیام: ' + err.message);
         }
     }
 
@@ -502,7 +870,7 @@
     // ابزارها
     // ─────────────────────────────────────
     function escapeHtml(text) {
-        return text
+        return String(text)
             .replace(/&/g, '&amp;')
             .replace(/</g, '&lt;')
             .replace(/>/g, '&gt;')
@@ -520,12 +888,7 @@
     // ─────────────────────────────────────
     // اجرا هنگام لود صفحه
     // ─────────────────────────────────────
-    loadMessages();
-
-    // Ctrl+Enter برای ارسال سریع
-    input.addEventListener('keydown', e => {
-        if (e.ctrlKey && e.key === 'Enter') saveMessage();
-    });
+    checkAuth();
 </script>
 
 </body>

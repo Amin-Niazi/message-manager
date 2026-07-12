@@ -1,0 +1,218 @@
+<!DOCTYPE html>
+<!-- lang="fa" dir="rtl" یعنی زبان صفحه فارسی و جهت نوشتار راست‌به‌چپ است -->
+<html lang="fa" dir="rtl">
+<head>
+    <meta charset="UTF-8"> <!-- کدگذاری کاراکترها؛ برای نمایش درست فارسی لازم است -->
+    <meta name="viewport" content="width=device-width, initial-scale=1.0"> <!-- سازگاری با موبایل -->
+    <title>ورود به پنل ادمین</title> <!-- عنوانی که در تب مرورگر نمایش داده می‌شود -->
+    <!-- استایل‌های ظاهری صفحه (رنگ‌ها، فاصله‌ها، چیدمان) -->
+    <style>
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+
+        body {
+            font-family: 'Vazirmatn', 'Tahoma', sans-serif;
+            background: #0d1117;
+            color: #e6edf3;
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 1rem;
+        }
+
+        .login-box {
+            width: 100%;
+            max-width: 380px;
+            background: #161b22;
+            border: 1px solid #30363d;
+            border-radius: 12px;
+            padding: 2rem;
+        }
+
+        .login-header {
+            text-align: center;
+            margin-bottom: 1.75rem;
+        }
+
+        .login-header .icon {
+            font-size: 2.25rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .login-header h1 {
+            font-size: 1.25rem;
+            font-weight: 700;
+            color: #e6edf3;
+            margin-bottom: 0.25rem;
+        }
+
+        .login-header p {
+            font-size: 0.85rem;
+            color: #8b949e;
+        }
+
+        .field {
+            margin-bottom: 1.1rem;
+        }
+
+        .field label {
+            display: block;
+            font-size: 0.82rem;
+            color: #8b949e;
+            margin-bottom: 0.4rem;
+        }
+
+        .field input {
+            width: 100%;
+            background: #0d1117;
+            border: 1px solid #30363d;
+            border-radius: 8px;
+            color: #e6edf3;
+            font-family: inherit;
+            font-size: 0.95rem;
+            padding: 0.7rem 0.9rem;
+            outline: none;
+            transition: border-color 0.2s;
+            direction: rtl;
+        }
+
+        .field input:focus {
+            border-color: #58a6ff;
+        }
+
+        .login-btn {
+            width: 100%;
+            background: #238636;
+            border: 1px solid #2ea043;
+            border-radius: 8px;
+            color: #fff;
+            font-family: inherit;
+            font-size: 0.95rem;
+            font-weight: 600;
+            padding: 0.75rem;
+            cursor: pointer;
+            transition: background 0.2s;
+            margin-top: 0.5rem;
+        }
+
+        .login-btn:hover:not(:disabled) { background: #2ea043; }
+        .login-btn:disabled { opacity: 0.6; cursor: not-allowed; }
+
+        .error-box {
+            display: none;
+            background: #2d0f0f;
+            border: 1px solid #f85149;
+            color: #f85149;
+            font-size: 0.85rem;
+            padding: 0.7rem 0.9rem;
+            border-radius: 8px;
+            margin-bottom: 1.1rem;
+        }
+
+        .error-box.show { display: block; }
+
+        .back-link {
+            display: block;
+            text-align: center;
+            margin-top: 1.25rem;
+            font-size: 0.82rem;
+            color: #58a6ff;
+            text-decoration: none;
+        }
+
+        .back-link:hover { text-decoration: underline; }
+    </style>
+</head>
+<body>
+
+<!-- کادر اصلی صفحه ورود -->
+<div class="login-box">
+
+    <!-- عنوان و توضیح بالای فرم -->
+    <div class="login-header">
+        <div class="icon">🔐</div>
+        <h1>ورود به پنل ادمین</h1>
+        <p>برای مدیریت پیام‌ها و دسته‌بندی‌ها وارد شوید</p>
+    </div>
+
+    <!-- جعبه نمایش پیام خطا (در حالت عادی مخفی است) -->
+    <div class="error-box" id="error-box"></div>
+
+    <!-- فرم ورود: نام کاربری + رمز عبور -->
+    <!-- ⚠️ این دو فیلد فقط برای واردکردن اطلاعات هستند؛ مقدار واقعی نام کاربری/رمز
+         در دیتابیس (جدول admins) ذخیره شده، نه در این فایل HTML. -->
+    <form id="login-form">
+        <div class="field">
+            <label for="username">نام کاربری</label>
+            <input type="text" id="username" autocomplete="username" required>
+        </div>
+        <div class="field">
+            <label for="password">رمز عبور</label>
+            <input type="password" id="password" autocomplete="current-password" required>
+        </div>
+        <!-- دکمه ارسال فرم؛ با کلیک، تابع submit در اسکریپت پایین اجرا می‌شود -->
+        <button type="submit" class="login-btn" id="login-btn">ورود</button>
+    </form>
+
+    <!-- لینک بازگشت به تابلوی عمومی پیام‌ها (بدون نیاز به ورود) -->
+    <a href="../user/index.html" class="back-link">← بازگشت به تابلوی پیام‌ها</a>
+</div>
+
+<!-- ============================================
+     اسکریپت جاوااسکریپت: منطق ارسال فرم ورود به API
+     ============================================ -->
+<script>
+    const API_URL   = '../../backend/api/auth.php'; // آدرس فایل PHP که درخواست ورود را پردازش می‌کند
+    const form      = document.getElementById('login-form');
+    const errorBox  = document.getElementById('error-box');
+    const loginBtn  = document.getElementById('login-btn');
+
+    // اگر قبلاً وارد شده، مستقیم به پنل برو
+    (async function checkExistingSession() {
+        try {
+            const res  = await fetch(`${API_URL}?action=status`, { credentials: 'include' });
+            const data = await res.json();
+            if (data.success && data.authenticated) {
+                window.location.href = 'index.html';
+            }
+        } catch (e) { /* بی‌اهمیت، کاربر فرم را می‌بیند */ }
+    })();
+
+    form.addEventListener('submit', async (e) => {
+        e.preventDefault();
+
+        const username = document.getElementById('username').value.trim();
+        const password = document.getElementById('password').value;
+
+        errorBox.classList.remove('show');
+        loginBtn.disabled = true;
+        loginBtn.textContent = 'در حال ورود...';
+
+        try {
+            const res = await fetch(`${API_URL}?action=login`, {
+                method: 'POST',
+                credentials: 'include',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ username, password }),
+            });
+
+            const data = await res.json();
+
+            if (!data.success) {
+                throw new Error(data.error || 'خطا در ورود.');
+            }
+
+            window.location.href = 'index.html';
+
+        } catch (err) {
+            errorBox.textContent = '❌ ' + err.message;
+            errorBox.classList.add('show');
+        } finally {
+            loginBtn.disabled = false;
+            loginBtn.textContent = 'ورود';
+        }
+    });
+</script>
+
+</body>
+</html>
