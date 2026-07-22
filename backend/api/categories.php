@@ -37,14 +37,20 @@ try {
         // گرفتن تمام دسته‌ها به همراه تعداد پیام هر دسته
         // (این بخش برای کاربر عادی هم آزاد است تا همه دسته‌ها را ببیند)
         // ─────────────────────────────────────
-        $stmt = $db->query(
-            'SELECT c.id, c.name, c.created_at,
-                    COUNT(m.id) AS message_count
-             FROM categories c
-             LEFT JOIN messages m ON m.category_id = c.id
-             GROUP BY c.id, c.name, c.created_at
-             ORDER BY c.name ASC'
-        );
+       $stmt = $db->query(
+    'SELECT c.id, c.name, c.created_at,
+            COUNT(m.id) AS message_count
+     FROM categories c
+     LEFT JOIN messages m ON m.category_id = c.id
+     GROUP BY c.id, c.name, c.created_at
+     ORDER BY 
+         CASE 
+             WHEN c.name = \'عمومی\' THEN 0
+             ELSE 1
+         END,
+         c.name ASC'
+);
+        
         $categories = $stmt->fetchAll();
 
         respond(200, [
@@ -136,3 +142,5 @@ try {
         'error'   => 'خطای سرور: ' . $e->getMessage(),
     ]);
 }
+
+            

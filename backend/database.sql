@@ -29,6 +29,8 @@ CREATE TABLE IF NOT EXISTS messages (
     id          INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
     category_id INT UNSIGNED NULL,
     text        TEXT         NOT NULL,
+    image_path  VARCHAR(255) NULL,               -- مسیر عکس ضمیمه پیام (نسبت به پوشه backend) - می‌تواند خالی باشد
+    image_width TINYINT UNSIGNED NULL DEFAULT 100, -- درصد عرض نمایش عکس نزد کاربر (25/50/75/100)
     created_at  DATETIME     NOT NULL DEFAULT CURRENT_TIMESTAMP,
     INDEX idx_created_at (created_at DESC),
     INDEX idx_category_id (category_id),

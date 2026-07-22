@@ -1,0 +1,5 @@
+# جلوگیری از اجرای هر نوع کد (php و ...) داخل پوشه آپلود
+# این کار امنیتی است: حتی اگر کسی فایل مخربی آپلود کند، سرور آن را اجرا نمی‌کند.
+<FilesMatch "\.(php|phtml|php3|php4|php5|pl|py|cgi|asp|sh)$">
+    Require all denied
+</FilesMatch>

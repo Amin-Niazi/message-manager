@@ -225,6 +225,70 @@
         }
 
         /* ─────────────────────────────────────
+           عکس ضمیمه پیام
+           (max-width: 100% تضمین می‌کند که حتی با عرض ۱۰۰٪،
+           عکس هرگز از کارت پیام بیرون نزند و در موبایل هم خراب نشود)
+        ───────────────────────────────────── */
+        .message-image-wrap {
+            margin-bottom: 0.75rem;
+            text-align: center;
+        }
+
+        .message-image-wrap img {
+            max-width: 100%;
+            height: auto;
+            border-radius: 8px;
+            display: inline-block;
+        }
+
+        /* ─────────────────────────────────────
+           صفحه‌بندی (Pagination)
+        ───────────────────────────────────── */
+        .pagination {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0.4rem;
+            margin-top: 1.75rem;
+            flex-wrap: wrap;
+        }
+
+        .page-btn {
+            background: #161b22;
+            border: 1px solid #30363d;
+            color: #c9d1d9;
+            font-family: inherit;
+            font-size: 0.85rem;
+            min-width: 2.25rem;
+            padding: 0.45rem 0.6rem;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .page-btn:hover:not(:disabled) {
+            border-color: #58a6ff;
+            color: #58a6ff;
+        }
+
+        .page-btn.active {
+            background: #1f6feb;
+            border-color: #388bfd;
+            color: #fff;
+        }
+
+        .page-btn:disabled {
+            opacity: 0.35;
+            cursor: not-allowed;
+        }
+
+        .page-info {
+            font-size: 0.8rem;
+            color: #8b949e;
+            margin: 0 0.5rem;
+        }
+
+        /* ─────────────────────────────────────
            حالت خالی بودن
         ───────────────────────────────────── */
         .empty-state {
@@ -313,6 +377,9 @@
     <!-- لیست پیام‌ها -->
     <div id="messages-list"></div>
 
+    <!-- صفحه‌بندی: وقتی پیام‌ها بیشتر از یک صفحه شوند نمایش داده می‌شود -->
+    <div class="pagination" id="pagination"></div>
+
 </div>
 
 <!-- ============================================
@@ -332,8 +399,11 @@
     const statusText    = document.getElementById('status-text');
     const refreshBtn     = document.getElementById('refresh-btn');
     const filterTabs     = document.getElementById('filter-tabs');
+    const pagination      = document.getElementById('pagination');
 
     let currentFilter = '';
+    let currentPage   = 1;      // صفحه فعلی
+    const PAGE_SIZE   = 3;      // تعداد پیام در هر صفحه (طبق درخواست: بیشتر از ۳ برود صفحه بعد)
 
     /**
      * تنظیم وضعیت نوار بالا
@@ -394,9 +464,19 @@
 
     function filterByCategory(categoryId, btn) {
         currentFilter = categoryId;
+        currentPage = 1; // با تغییر دسته‌بندی، همیشه از صفحه ۱ شروع می‌کنیم
         [...filterTabs.children].forEach(b => b.classList.remove('active'));
         btn.classList.add('active');
         loadMessages();
+    }
+
+    /**
+     * رفتن به یک صفحه مشخص (از دکمه‌های صفحه‌بندی صدا زده می‌شود)
+     */
+    function goToPage(page) {
+        currentPage = page;
+        loadMessages();
+        window.scrollTo({ top: 0, behavior: 'smooth' });
     }
 
     /**
@@ -409,11 +489,13 @@
         messagesList.innerHTML = '';
 
         try {
-            const url = currentFilter
-                ? `${MESSAGES_API}?category_id=${encodeURIComponent(currentFilter)}`
-                : MESSAGES_API;
+            const params = new URLSearchParams({
+                page:  currentPage,
+                limit: PAGE_SIZE,
+            });
+            if (currentFilter) params.set('category_id', currentFilter);
 
-            const res  = await fetch(url);
+            const res  = await fetch(`${MESSAGES_API}?${params.toString()}`);
             const data = await res.json();
 
             if (!data.success) {
@@ -442,7 +524,16 @@
                         ? `<span class="category-tag">${escapeHtml(msg.category_name)}</span>`
                         : `<span class="category-tag none">بدون دسته</span>`;
 
+                    // اگر پیام عکس داشته باشد، با عرضی که ادمین تعیین کرده نمایش داده می‌شود
+                    // (max-width: 100% در CSS تضمین می‌کند که در موبایل هم خراب نشود)
+                    const imageHtml = msg.image_path
+                        ? `<div class="message-image-wrap">
+                               <img src="../../backend/${msg.image_path}" style="width:${msg.image_width || 100}%" alt="عکس پیام" loading="lazy">
+                           </div>`
+                        : '';
+
                     card.innerHTML = `
+                        ${imageHtml}
                         <div class="message-text">${escapeHtml(msg.text)}</div>
                         <div class="message-meta">
                             <span class="message-id">#${msg.id}</span>
@@ -454,7 +545,8 @@
                 });
             }
 
-            setStatus('ok', `${messages.length} پیام دریافت شد`);
+            setStatus('ok', `${data.count} پیام یافت شد`);
+            renderPagination(data.page, data.total_pages);
 
         } catch (err) {
             setStatus('error', 'خطا در اتصال به سرور: ' + err.message);
@@ -463,9 +555,32 @@
                     <p style="color:#f85149">❌ خطا در بارگذاری پیام‌ها. لطفاً دوباره تلاش کنید.</p>
                 </div>
             `;
+            pagination.innerHTML = '';
         } finally {
             refreshBtn.classList.remove('spinning');
         }
+    }
+
+    /**
+     * ساخت دکمه‌های صفحه‌بندی: «قبلی»، شماره صفحات، «بعدی»
+     */
+    function renderPagination(page, totalPages) {
+        // اگر همه پیام‌ها در یک صفحه جا می‌شوند، صفحه‌بندی لازم نیست
+        if (totalPages <= 1) {
+            pagination.innerHTML = '';
+            return;
+        }
+
+        let html = `<button class="page-btn" ${page <= 1 ? 'disabled' : ''} onclick="goToPage(${page - 1})">‹ قبلی</button>`;
+
+        for (let p = 1; p <= totalPages; p++) {
+            html += `<button class="page-btn ${p === page ? 'active' : ''}" onclick="goToPage(${p})">${p}</button>`;
+        }
+
+        html += `<button class="page-btn" ${page >= totalPages ? 'disabled' : ''} onclick="goToPage(${page + 1})">بعدی ›</button>`;
+        html += `<span class="page-info">صفحه ${page} از ${totalPages}</span>`;
+
+        pagination.innerHTML = html;
     }
 
     // بارگذاری اولیه هنگام ورود به صفحه
